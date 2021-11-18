@@ -38,13 +38,14 @@ func init() {
 
 func main() {
 	Session.AddHandler(messageCreate)
+	Session.AddHandler(interactionCreate)
 
 	defer Session.Close()
 
 	stop := make(chan os.Signal)
 	signal.Notify(stop, os.Interrupt)
 	<-stop
-	log.Println("봇 종료됨")
+	log.Println("Disconnected.")
 }
 
 func registerCommands() {
@@ -71,5 +72,11 @@ func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if i.Type != discordgo.InteractionApplicationCommand ||
 		i.User.Bot {
 		return
+	}
+
+	commandName := i.ApplicationCommandData().Name
+
+	if cmd, exist := Command.GetCommands(commandName); exist {
+		cmd(framework.CreateNewInteractionContext(s, i.Interaction))
 	}
 }
